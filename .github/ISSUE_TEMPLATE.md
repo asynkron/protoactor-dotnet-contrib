@@ -1,9 +1,7 @@
 ## Expected Behavior
 
-
 <!-- If this issue is a feature request remove text below -->
 ## Actual Behavior
-
 
 ## Steps to Reproduce the Problem
 
