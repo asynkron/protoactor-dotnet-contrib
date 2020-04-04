@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Proto</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Proto.Actor" Version="0.2.1-alpha.0.26" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
+  </ItemGroup>
+</Project>

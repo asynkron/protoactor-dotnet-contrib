@@ -1,0 +1,40 @@
+name: Build and deploy
+
+on:
+  push:
+    branches:
+      - dev
+    tags:
+      - '*'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.102'
+
+      - name: Build
+        run: dotnet build -c Release
+
+      - name: Run tests
+        run: |
+          docker-compose -f tests/docker-compose.yml up -d
+          dotnet test -c Release
+          docker-compose -f tests/docker-compose.yml down
+        
+  nuget:
+    runs-on: windows-latest
+    needs: [test]
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Create and push NuGet package
+      run: |
+        dotnet pack -c Release -o nuget -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+#        dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+  
