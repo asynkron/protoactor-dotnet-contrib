@@ -3,7 +3,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Proto.Cluster" Version="0.2.1-alpha.0.26" />
+    <PackageReference Include="Proto.Cluster" Version="0.3.0" />
     <PackageReference Include="Grpc.Tools" Version="2.23.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>

@@ -5,7 +5,7 @@
   <ItemGroup>
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="Grpc.Tools" Version="2.23.0" PrivateAssets="All" />
-    <PackageReference Include="Proto.Cluster" Version="0.2.1-alpha.0.26" />
+    <PackageReference Include="Proto.Cluster" Version="0.3.0" />
   </ItemGroup>
   <ItemGroup>
     <Protobuf Include="Protos.proto" GrpcServices="Server" ProtoRoot=".; ..\..\..\src" />

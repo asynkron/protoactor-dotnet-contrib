@@ -6,9 +6,6 @@
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.11.4" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\src\serialization\Proto.Serialization.Wire\Proto.Serialization.Wire.csproj" />
     <ProjectReference Include="..\Messages\Messages.csproj" />
   </ItemGroup>

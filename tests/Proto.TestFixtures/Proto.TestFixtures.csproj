@@ -4,13 +4,13 @@
     <IsTestProject>false</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Remove="AutoFixture.Xunit2"/>
+    <PackageReference Remove="AutoFixture.Xunit2" />
     <PackageReference Remove="FluentAssertions" />
-    <PackageReference Remove="Microsoft.NET.Test.Sdk"/>
+    <PackageReference Remove="Microsoft.NET.Test.Sdk" />
     <PackageReference Remove="xunit" />
     <PackageReference Remove="xunit.runner.visualstudio" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Proto.Actor" Version="0.2.1-alpha.0.26" />
+    <PackageReference Include="Proto.Actor" Version="0.3.0" />
   </ItemGroup>
 </Project>
