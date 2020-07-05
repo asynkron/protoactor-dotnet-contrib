@@ -47,8 +47,7 @@ namespace Proto.OpenTracing.Tests
             var actorProps = Props
                 .FromFunc(ctx => { messages.Add(ctx.Message); return Actor.Done; })
                 .WithMailbox(() => new TestMailbox())
-                .WithOpenTracing(tracer: _tracer)
-                ;
+                .WithOpenTracing(tracer: _tracer);
 
             var actor = System.Root.Spawn(actorProps);
 

@@ -102,6 +102,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extensions", "Extensions", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyInjection", "examples\extensions\DependencyInjection\DependencyInjection.csproj", "{A640A2FC-50B8-4B37-B84A-DBB696F4FDDB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Proto.Cluster.Kubernetes", "src\clustering\Proto.Cluster.Kubernetes\Proto.Cluster.Kubernetes.csproj", "{6D3615C0-5199-4A77-A75B-B4179C824BBE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Proto.Cluster.Extensions", "src\extensions\Proto.Cluster.Extensions\Proto.Cluster.Extensions.csproj", "{7E8041E2-CD03-4D72-9DF0-9CCF2ADD7CA2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -150,6 +154,8 @@ Global
 		{E89CBE67-D369-400C-94A3-860E01651444} = {DAF28DDB-433F-4452-B1D7-09BBCD7DA0A0}
 		{A02A97C0-7273-491C-8932-868DC71D8697} = {749669AE-5A73-4818-9153-47D3338551A4}
 		{A640A2FC-50B8-4B37-B84A-DBB696F4FDDB} = {A02A97C0-7273-491C-8932-868DC71D8697}
+		{6D3615C0-5199-4A77-A75B-B4179C824BBE} = {D69DF265-249C-488C-8CC1-B33487AA19DA}
+		{7E8041E2-CD03-4D72-9DF0-9CCF2ADD7CA2} = {AB730E77-1CDD-482E-91CA-1768F642819F}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7A5E4721-7FA6-4730-99C6-E098481CA20C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -284,5 +290,13 @@ Global
 		{A640A2FC-50B8-4B37-B84A-DBB696F4FDDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A640A2FC-50B8-4B37-B84A-DBB696F4FDDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A640A2FC-50B8-4B37-B84A-DBB696F4FDDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D3615C0-5199-4A77-A75B-B4179C824BBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D3615C0-5199-4A77-A75B-B4179C824BBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D3615C0-5199-4A77-A75B-B4179C824BBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D3615C0-5199-4A77-A75B-B4179C824BBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E8041E2-CD03-4D72-9DF0-9CCF2ADD7CA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E8041E2-CD03-4D72-9DF0-9CCF2ADD7CA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E8041E2-CD03-4D72-9DF0-9CCF2ADD7CA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E8041E2-CD03-4D72-9DF0-9CCF2ADD7CA2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

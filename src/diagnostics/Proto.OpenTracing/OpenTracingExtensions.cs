@@ -20,10 +20,10 @@ namespace Proto.OpenTracing
         /// <summary>
         /// Setup open tracing send middleware & decorator.
         /// </summary>
-        /// <param name="props">props.</param>
-        /// <param name="sendSpanSetup">provide a way inject send span constumisation according to the message.</param>
-        /// <param name="receiveSpanSetup">provide a way inject receive span constumisation according to the message.</param>
-        /// <param name="tracer">OpenTracing, if nul : GlobalTracer.Instance will be used.</param>
+        /// <param name="props">Props instance.</param>
+        /// <param name="sendSpanSetup">Customize send span</param>
+        /// <param name="receiveSpanSetup">Customize receive span</param>
+        /// <param name="tracer">Tracer instance, default is GlobalTracer.Instance</param>
         /// <returns>props</returns>
         public static Props WithOpenTracing(
             this Props props, SpanSetup sendSpanSetup = null, SpanSetup receiveSpanSetup = null, ITracer tracer = null
@@ -36,7 +36,7 @@ namespace Proto.OpenTracing
             => props.WithSenderMiddleware(OpenTracingSenderMiddleware(tracer));
 
         /// <summary>
-        /// Only responsible to tweak the envelop in order to send SpanContext informations.
+        /// Only responsible to tweak the envelop in order to send SpanContext information.
         /// </summary>
         public static Func<Sender, Sender> OpenTracingSenderMiddleware(ITracer tracer = null)
             => next => async (context, target, envelope) =>
@@ -76,7 +76,7 @@ namespace Proto.OpenTracing
         /// Setup open tracing send decorator around RootContext.
         /// DO NOT FORGET to create the RootContext passing OpenTracingExtensions.OpenTracingSenderMiddleware to the constructor.
         /// </summary>
-        /// <param name="props">props.</param>
+        /// <param name="context">Root context</param>
         /// <param name="sendSpanSetup">provide a way inject send span constumisation according to the message.</param>
         /// <param name="tracer">OpenTracing, if nul : GlobalTracer.Instance will be used.</param>
         /// <returns>IRootContext</returns>
