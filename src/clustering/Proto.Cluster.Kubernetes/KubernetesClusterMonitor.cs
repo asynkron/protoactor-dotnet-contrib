@@ -7,8 +7,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mime;
-using System.Threading;
 using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
@@ -19,12 +17,14 @@ using static Proto.Cluster.Kubernetes.ProtoLabels;
 
 namespace Proto.Cluster.Kubernetes
 {
-    public class KubernetesClusterMonitor : IActor
+    class KubernetesClusterMonitor : IActor
     {
-        private static readonly ILogger Logger = Log.CreateLogger<KubernetesClusterMonitor>();
+        static readonly ILogger Logger = Log.CreateLogger<KubernetesClusterMonitor>();
 
-        private readonly ActorSystem _system;
-        private readonly IKubernetes _kubernetes;
+        IMemberStatusValueSerializer _statusValueSerializer;
+
+        readonly ActorSystem _system;
+        readonly IKubernetes _kubernetes;
 
         public KubernetesClusterMonitor(ActorSystem system, IKubernetes kubernetes)
         {
@@ -37,195 +37,126 @@ namespace Proto.Cluster.Kubernetes
             var task = context.Message switch
             {
                 RegisterMember cmd       => Register(cmd),
-                StartWatchingCluster cmd => StartWatchingCluster(cmd.ClusterName),
-                DeregisterMember _       => UnregisterService(),
-                UpdateStatusValue cmd    => UpdateStatusValue(cmd.StatusValue),
-                ReregisterMember _       => RegisterService(),
-                Stopping _               => Stop(),
+                StartWatchingCluster cmd => StartWatchingCluster(cmd.ClusterName, context),
+                DeregisterMember _       => StopWatchingCluster(),
+                Stopping _               => StopWatchingCluster(),
                 _                        => Task.CompletedTask
             };
             await task.ConfigureAwait(false);
-
-            Task Stop()
-            {
-                Logger.LogInformation("Stopping monitoring for {PodName} with ip {PodIp}", _podName, _address);
-                return _registered ? UnregisterService() : Actor.Done;
-            }
         }
 
-        private async Task Register(RegisterMember cmd)
+        Task Register(RegisterMember cmd)
         {
             _clusterName = cmd.ClusterName;
             _address = cmd.Address;
-            _port = cmd.Port;
-            _kinds = cmd.Kinds;
             _statusValueSerializer = cmd.StatusValueSerializer;
-            _statusValue = cmd.StatusValue;
             _podName = KubernetesExtensions.GetPodName();
-
-            await RegisterService();
+            return Actor.Done;
         }
 
-        private async Task UpdateStatusValue(IMemberStatusValue statusValue)
+        Task StopWatchingCluster()
         {
-            Logger.LogDebug("Updating the status value to {statusValue}", statusValue);
-
-            var labels = new Dictionary<string, string>
+            // ReSharper disable once InvertIf
+            if (_watching)
             {
-                [LabelStatusValue] = _statusValueSerializer.Serialize(statusValue)
-            };
+                Logger.LogInformation("[Cluster] Stopping monitoring for {PodName} with ip {PodIp}", _podName, _address);
 
-            try
-            {
-                await _kubernetes.AddPodLabels(_podName, KubernetesExtensions.GetKubeNamespace(), labels);
-            }
-            catch (HttpOperationException e)
-            {
-                Logger.LogError(e, "Unable to update pod labels");
-            }
-
-            _statusValue = statusValue;
-        }
-
-        private async Task RegisterService()
-        {
-            Logger.LogInformation("Registering service {PodName} on {PodIp}", _podName, _address);
-
-            var pod = await _kubernetes.ReadNamespacedPodAsync(_podName, KubernetesExtensions.GetKubeNamespace());
-
-            if (pod == null) throw new ApplicationException($"Unable to get own pod information for {_podName}");
-
-            var matchingPort = pod.FindPort(_port);
-
-            if (matchingPort == null)
-            {
-                Logger.LogWarning("Registration port doesn't match any of the container ports");
-            }
-
-            var protoKinds = new List<string>();
-
-            if (pod.Metadata.Labels.TryGetValue(LabelKinds, out var protoKindsString))
-            {
-                protoKinds.AddRange(protoKindsString.Split(','));
-            }
-
-            protoKinds.AddRange(_kinds);
-
-            var labels = new Dictionary<string, string>(pod.Metadata.Labels)
-            {
-                [LabelCluster] = _clusterName,
-                [LabelKinds] = string.Join(",", protoKinds.Distinct()),
-                [LabelPort] = _port.ToString(),
-                [LabelStatusValue] = _statusValueSerializer.Serialize(_statusValue)
-            };
-
-            try
-            {
-                await _kubernetes.ReplacePodLabels(_podName, KubernetesExtensions.GetKubeNamespace(), labels);
-            }
-            catch (HttpOperationException e)
-            {
-                Logger.LogError(e, "Unable to update pod labels, registration failed");
-                throw;
-            }
-
-            _registered = true;
-        }
-
-        private async Task UnregisterService()
-        {
-            Logger.LogInformation("Unregistering service {PodName} on {PodIp}", _podName, _address);
-
-            try
-            {
+                _stopping = true;
                 _watcher.Dispose();
-                await _watcherTask;
-            }
-            catch (TaskCanceledException)
-            {
-                // expected
+                _watcherTask.Dispose();
             }
 
-            _registered = false;
+            return Actor.Done;
         }
 
-        private Task StartWatchingCluster(string clusterName)
+        Task StartWatchingCluster(string clusterName, ISenderContext context)
         {
             var selector = $"{LabelCluster}={clusterName}";
-            Logger.LogInformation("Starting to watch pods with {Selector}", selector);
+            Logger.LogInformation("[Cluster] Starting to watch pods with {Selector}", selector);
 
             _watcherTask = _kubernetes.ListNamespacedPodWithHttpMessagesAsync(
                 KubernetesExtensions.GetKubeNamespace(),
                 labelSelector: selector,
                 watch: true
             );
-            _watcher = _watcherTask.Watch<V1Pod, V1PodList>(Watch, Error);
+            _watcher = _watcherTask.Watch<V1Pod, V1PodList>(Watch, Error, Closed);
+            _watching = true;
 
-            void Watch(WatchEventType eventType, V1Pod eventPod)
+            void Error(Exception ex)
             {
-                Logger.LogInformation("Kubernetes update {EventType}: {@PodUpdate}", eventType, eventPod);
+                // If we are already in stopping state, just ignore it
+                if (_stopping) return;
 
-                var podLabels = eventPod.Metadata.Labels;
+                // We log it and attempt to watch again, overcome transient issues
+                Logger.LogInformation("[Cluster] Unable to watch the cluster status: {Error}", ex.Message);
+                Restart();
+            }
 
-                if (!podLabels.TryGetValue(LabelCluster, out var podClusterName))
-                {
-                    Logger.LogInformation("The pod {PodName} is not a Proto.Cluster node", eventPod.Metadata.Name);
-                    return;
-                }
+            // The watcher closes from time to time and needs to be restarted
+            void Closed()
+            {
+                // If we are already in stopping state, just ignore it
+                if (_stopping) return;
 
-                if (clusterName != podClusterName)
-                {
-                    Logger.LogInformation("The pod {PodName} is from another cluster {Cluster}", eventPod.Metadata.Name, clusterName);
-                    return;
-                }
+                Logger.LogInformation("[Cluster] Watcher has closed, restarting");
+                Restart();
+            }
 
-                // Update the list of known pods
-                if (eventType == WatchEventType.Deleted)
-                {
-                    _clusterPods.Remove(eventPod.Uid());
-                }
-                else
-                {
-                    _clusterPods[eventPod.Uid()] = eventPod;
-                }
-
-                if (eventPod.Name() == _podName && eventPod.Status.PodIP != _address)
-                {
-                    Logger.LogCritical("FUCK! My ip address changed from {OldIp} to {NewIp}!!!", _address, eventPod.Status.PodIP);
-                }
-
-                var memberStatuses = _clusterPods.Values
-                    .Select(x => x.GetMemberStatus(_statusValueSerializer))
-                    .Where(x => x.IsCandidate)
-                    .Select(x => x.Status)
-                    .ToList();
-                Logger.LogInformation("Cluster members updated {@Members}", memberStatuses);
-
-                _system.EventStream.Publish(new ClusterTopologyEvent(memberStatuses));
+            void Restart()
+            {
+                _watching = false;
+                _watcher?.Dispose();
+                _watcherTask?.Dispose();
+                context.Send(context.Self!, new StartWatchingCluster(_clusterName));
             }
 
             return Actor.Done;
-
-            static void Error(Exception ex)
-            {
-                if (ex is TaskCanceledException || ex is OperationCanceledException)
-                    Logger.LogInformation("The watcher is stopping");
-                else
-                    Logger.LogWarning("Error occured watching the cluster status: {Error}", ex.Message);
-            }
         }
 
-        private readonly Dictionary<string, V1Pod> _clusterPods = new Dictionary<string, V1Pod>();
+        void Watch(WatchEventType eventType, V1Pod eventPod)
+        {
+            var podLabels = eventPod.Metadata.Labels;
 
-        private Watcher<V1Pod> _watcher;
-        private IMemberStatusValue _statusValue;
-        private string _clusterName;
-        private string _address;
-        private int _port;
-        private string[] _kinds;
-        private bool _registered;
-        private string _podName;
-        private Task<HttpOperationResponse<V1PodList>> _watcherTask;
-        private IMemberStatusValueSerializer _statusValueSerializer;
+            if (!podLabels.TryGetValue(LabelCluster, out var podClusterName))
+            {
+                Logger.LogInformation("[Cluster] The pod {PodName} is not a Proto.Cluster node", eventPod.Metadata.Name);
+                return;
+            }
+
+            if (_clusterName != podClusterName)
+            {
+                Logger.LogInformation("[Cluster] The pod {PodName} is from another cluster {Cluster}", eventPod.Metadata.Name, _clusterName);
+                return;
+            }
+
+            // Update the list of known pods
+            if (eventType == WatchEventType.Deleted)
+            {
+                _clusterPods.Remove(eventPod.Uid());
+            }
+            else
+            {
+                _clusterPods[eventPod.Uid()] = eventPod;
+            }
+
+            var memberStatuses = _clusterPods.Values
+                .Select(x => x.GetMemberStatus(_statusValueSerializer))
+                .Where(x => x.IsCandidate)
+                .Select(x => x.Status)
+                .ToList();
+            Logger.LogInformation("Cluster members updated {@Members}", memberStatuses);
+
+            _system.EventStream.Publish(new ClusterTopologyEvent(memberStatuses));
+        }
+
+        readonly Dictionary<string, V1Pod> _clusterPods = new Dictionary<string, V1Pod>();
+
+        string _clusterName;
+        string _address;
+        string _podName;
+        bool _watching;
+        Watcher<V1Pod> _watcher;
+        Task<HttpOperationResponse<V1PodList>> _watcherTask;
+        bool _stopping;
     }
 }

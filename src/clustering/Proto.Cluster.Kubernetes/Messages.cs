@@ -30,5 +30,10 @@ namespace Proto.Cluster.Kubernetes
         }
 
         public class ReregisterMember { }
+
+        // public class EnsureWatcher
+        // {
+        //     public static EnsureWatcher Instance { get; } = new EnsureWatcher();
+        // }
     }
 }
