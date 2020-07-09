@@ -53,14 +53,14 @@ namespace Proto.OpenTracing
         {
             _sendSpanSetup = (span, message) =>
             {
-                ProtoTags.ActorType.Set(span, context.Actor.GetType().Name);
-                ProtoTags.SenderPID.Set(span, context.Self.ToShortString());
+                ProtoTags.ActorType.Set(span, context.Actor!.GetType().Name);
+                ProtoTags.SenderPID.Set(span, context.Self!.ToShortString());
                 sendSpanSetup(span, message);
             };
             _receiveSpanSetup = (span, message) =>
             {
-                ProtoTags.ActorType.Set(span, context.Actor.GetType().Name);
-                ProtoTags.TargetPID.Set(span, context.Self.ToShortString());
+                ProtoTags.ActorType.Set(span, context.Actor!.GetType().Name);
+                ProtoTags.TargetPID.Set(span, context.Self!.ToShortString());
                 receiveSpanSetup(span, message);
             };
 

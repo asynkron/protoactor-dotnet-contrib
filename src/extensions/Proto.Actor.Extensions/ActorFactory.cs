@@ -24,15 +24,23 @@ namespace Proto
         }
 
         public PID GetActor(string id, string address = null, IContext parent = null)
-        {
-            return GetActor(id, address, parent, () => throw new InvalidOperationException($"Actor not created {id}"));
-        }
+            => GetActor(id, address, parent, () => throw new InvalidOperationException($"Actor not created {id}"));
 
         public PID GetActor<T>(string id = null, string address = null, IContext parent = null)
             where T : IActor
         {
             id ??= typeof(T).FullName;
-            return GetActor(id, address, parent, () => CreateActor<T>(id, parent, () => new Props().WithProducer(() => ActivatorUtilities.GetServiceOrCreateInstance<T>(_serviceProvider))));
+
+            return GetActor(
+                id,
+                address,
+                parent,
+                () => CreateActor<T>(
+                    id,
+                    parent,
+                    () => new Props().WithProducer(() => ActivatorUtilities.GetServiceOrCreateInstance<T>(_serviceProvider))
+                )
+            );
         }
 
         public PID GetActor(string id, string address, IContext parent, Func<PID> create)
@@ -40,21 +48,24 @@ namespace Proto
             address ??= "nonhost";
 
             var pidId = id;
+
             if (parent != null)
             {
-                pidId = $"{parent.Self.Id}/{id}";
+                pidId = $"{parent.Self!.Id}/{id}";
             }
 
             var pid = new PID(address, pidId);
             var reff = _actorSystem.ProcessRegistry.Get(pid);
+
             if (reff is DeadLetterProcess)
             {
                 pid = create();
             }
+
             return pid;
         }
 
-        private PID CreateActor<T>(string id, IContext parent, Func<Props> producer)
+        private PID CreateActor<T>(string id, ISpawnerContext parent, Func<Props> producer)
             where T : IActor
         {
             if (!_actorPropsRegistry.RegisteredProps.TryGetValue(typeof(T), out var props))
@@ -63,11 +74,7 @@ namespace Proto
             }
 
             var props2 = props(producer());
-            if (parent == null)
-            {
-                return _actorSystem.Root.SpawnNamed(props2, id);
-            }
-            return parent.SpawnNamed(props2, id);
+            return parent == null ? _actorSystem.Root.SpawnNamed(props2, id) : parent.SpawnNamed(props2, id);
         }
     }
 }

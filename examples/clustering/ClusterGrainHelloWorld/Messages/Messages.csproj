@@ -8,6 +8,6 @@
     <PackageReference Include="Proto.Cluster" Version="0.3.0" />
   </ItemGroup>
   <ItemGroup>
-    <Protobuf Include="Protos.proto" GrpcServices="Server" ProtoRoot=".; ..\..\..\src" />
+    <Protobuf Include="Protos.proto" GrpcServices="Client,Server" />
   </ItemGroup>
 </Project>
