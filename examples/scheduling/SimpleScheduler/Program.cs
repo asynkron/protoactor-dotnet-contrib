@@ -18,10 +18,10 @@ namespace SimpleScheduler
 
             context
                 .ScheduleTellOnce(TimeSpan.FromMilliseconds(100), pid, new SimpleMessage("test 1 from root context"))
-                .ScheduleTellOnce(TimeSpan.FromMilliseconds(200), pid, new SimpleMessage("test 2 from root context"))
-                .ScheduleTellOnce(TimeSpan.FromMilliseconds(300), pid, new SimpleMessage("test 3 from root context"))
-                .ScheduleTellOnce(TimeSpan.FromMilliseconds(400), pid, new SimpleMessage("test 4 from root context"))
-                .ScheduleTellOnce(TimeSpan.FromMilliseconds(500), pid, new SimpleMessage("test 5 from root context"));
+                .ScheduleSendOnce(TimeSpan.FromMilliseconds(200), pid, new SimpleMessage("test 2 from root context"))
+                .ScheduleSendOnce(TimeSpan.FromMilliseconds(300), pid, new SimpleMessage("test 3 from root context"))
+                .ScheduleSendOnce(TimeSpan.FromMilliseconds(400), pid, new SimpleMessage("test 4 from root context"))
+                .ScheduleSendOnce(TimeSpan.FromMilliseconds(500), pid, new SimpleMessage("test 5 from root context"));
 
             Console.ReadLine();
         }
@@ -61,12 +61,12 @@ namespace SimpleScheduler
                     var pid = context.Spawn(Props.FromProducer(() => new ScheduleGreetActor()));
                     context
                         .ScheduleTellOnce(TimeSpan.FromMilliseconds(100), context.Self, new SimpleMessage("test 1"))
-                        .ScheduleTellOnce(TimeSpan.FromMilliseconds(200), context.Self, new SimpleMessage("test 2"))
-                        .ScheduleTellOnce(TimeSpan.FromMilliseconds(300), context.Self, new SimpleMessage("test 3"))
-                        .ScheduleTellOnce(TimeSpan.FromMilliseconds(400), context.Self, new SimpleMessage("test 4"))
-                        .ScheduleTellOnce(TimeSpan.FromMilliseconds(500), context.Self, new SimpleMessage("test 5"))
+                        .ScheduleSendOnce(TimeSpan.FromMilliseconds(200), context.Self, new SimpleMessage("test 2"))
+                        .ScheduleSendOnce(TimeSpan.FromMilliseconds(300), context.Self, new SimpleMessage("test 3"))
+                        .ScheduleSendOnce(TimeSpan.FromMilliseconds(400), context.Self, new SimpleMessage("test 4"))
+                        .ScheduleSendOnce(TimeSpan.FromMilliseconds(500), context.Self, new SimpleMessage("test 5"))
                         .ScheduleRequestOnce(TimeSpan.FromSeconds(1), context.Self, pid, new Greet("Daniel"))
-                        .ScheduleTellOnce(TimeSpan.FromSeconds(5), context.Self, new Hello());
+                        .ScheduleSendOnce(TimeSpan.FromSeconds(5), context.Self, new Hello());
                     break;
                 case Hello _:
                     Console.WriteLine("Hello Once, let's give you a hiccup every 0.5 second starting in 3 seconds!");

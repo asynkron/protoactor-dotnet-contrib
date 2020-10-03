@@ -10,7 +10,7 @@ namespace Proto.Schedulers.SimpleScheduler
 
         public SimpleScheduler(ISenderContext context) => _context = context;
 
-        public ISimpleScheduler ScheduleTellOnce(TimeSpan delay, PID target, object message)
+        public ISimpleScheduler ScheduleSendOnce(TimeSpan delay, PID target, object message)
         {
             Task.Run(async () =>
             {
@@ -22,7 +22,7 @@ namespace Proto.Schedulers.SimpleScheduler
             return this;
         }
 
-        public ISimpleScheduler ScheduleTellRepeatedly(TimeSpan delay, TimeSpan interval, PID target, object message, out CancellationTokenSource cancellationTokenSource)
+        public ISimpleScheduler ScheduleSendRepeatedly(TimeSpan delay, TimeSpan interval, PID target, object message, out CancellationTokenSource cancellationTokenSource)
         {
             var cts = new CancellationTokenSource();
 
