@@ -64,18 +64,12 @@ namespace Proto.Serialization.Wire
 
         public ByteString Serialize(object obj)
         {
-            try
-            {
-                var ms = new MemoryStream();
-                _serializer.Serialize(obj, ms);
-                var arr = ms.ToArray();
-                ms.Dispose();
-                return ByteString.CopyFrom(arr);
-            }
-            catch
-            {
-                throw; //for debugging purposes
-            }
+
+            var ms = new MemoryStream();
+            _serializer.Serialize(obj, ms);
+            var arr = ms.ToArray();
+            ms.Dispose();
+            return ByteString.CopyFrom(arr);
         }
 
         public object Deserialize(ByteString bytes, string typeName)

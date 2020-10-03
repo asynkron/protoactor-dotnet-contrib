@@ -37,12 +37,12 @@ namespace Node2
 
             grains.HelloGrainFactory(() => new HelloGrain());
 
-            await cluster.Start("MyCluster", "node2", 12000, new ConsulProvider(new ConsulProviderOptions(), c => c.Address = new Uri("http://consul:8500/")));
+            await cluster.StartMemberAsync("MyCluster", "node2", 12000, new ConsulProvider(new ConsulProviderOptions(), c => c.Address = new Uri("http://consul:8500/")));
 
             Console.CancelKeyPress += async (e, y) =>
             {
                 Console.WriteLine("Shutting Down...");
-                await cluster.Shutdown();
+                await cluster.ShutdownAsync();
             };
             await Task.Delay(-1);
         }

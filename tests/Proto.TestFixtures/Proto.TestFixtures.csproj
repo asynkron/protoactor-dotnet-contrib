@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <IsTestProject>false</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
@@ -11,6 +11,6 @@
     <PackageReference Remove="xunit.runner.visualstudio" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Proto.Actor" Version="0.3.0" />
+    <PackageReference Include="Proto.Actor" Version="0.3.1-alpha.0.89" />
   </ItemGroup>
 </Project>

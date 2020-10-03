@@ -11,7 +11,6 @@ using Microsoft.Extensions.Logging;
 using Proto;
 using Proto.Cluster;
 using Proto.Cluster.Consul;
-using Proto.Cluster.SingleRemoteInstance;
 using Proto.Remote;
 using ProtosReflection = Messages.ProtosReflection;
 
@@ -47,19 +46,16 @@ namespace Node2
 
             var parsedArgs = ParseArgs(args);
             Cluster.Remote.RegisterKnownKind("HelloKind", props);
-
-            // SINGLE REMOTE INSTANCE
-            // Cluster.Start("MyCluster", parsedArgs.ServerName, 12000, new SingleRemoteInstanceProvider(parsedArgs.ServerName, 12001));
-
+            
             // CONSUL 
-            await Cluster.Start(
+            await Cluster.StartMemberAsync(
                 "MyCluster", "node2", 12000, new ConsulProvider(new ConsulProviderOptions(), c => c.Address = new Uri("http://consul:8500/"))
             );
 
             await Task.Delay(-1);
 
             Console.WriteLine("Shutting Down...");
-            await Cluster.Shutdown();
+            await Cluster.ShutdownAsync();
         }
 
         private static Node2Config ParseArgs(string[] args)

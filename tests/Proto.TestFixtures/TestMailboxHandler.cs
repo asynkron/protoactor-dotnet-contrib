@@ -9,7 +9,7 @@ namespace Proto.TestFixtures
 {
     public class TestMailboxHandler : IMessageInvoker, IDispatcher
     {
-        private ConcurrentQueue<TaskCompletionSource<int>> _taskCompletionQueue =
+        private readonly ConcurrentQueue<TaskCompletionSource<int>> _taskCompletionQueue =
             new ConcurrentQueue<TaskCompletionSource<int>>();
 
         public List<Exception> EscalatedFailures { get; set; } = new List<Exception>();
@@ -28,6 +28,8 @@ namespace Proto.TestFixtures
         {
             EscalatedFailures.Add(reason);
         }
+
+        public CancellationTokenSource? CancellationTokenSource { get; }
 
         public int Throughput { get; } = 10;
 

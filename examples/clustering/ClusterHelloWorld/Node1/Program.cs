@@ -5,13 +5,13 @@
 // -----------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Messages;
 using Microsoft.Extensions.Logging;
 using Proto;
 using Proto.Cluster;
 using Proto.Cluster.Consul;
-using Proto.Cluster.SingleRemoteInstance;
 using Proto.Remote;
 using ProtosReflection = Messages.ProtosReflection;
 
@@ -36,20 +36,15 @@ namespace Node1
 
             // CONSUL 
 
-            await cluster.Start(
+            await cluster.StartMemberAsync(
                 "MyCluster", "node1", 12001, new ConsulProvider(new ConsulProviderOptions(), c => c.Address = new Uri("http://consul:8500/"))
             );
-
-            var (pid, sc) = await cluster.GetAsync("TheName", "HelloKind");
-
-            while (sc != ResponseStatusCode.OK)
-                (pid, sc) = await cluster.GetAsync("TheName", "HelloKind");
-
+            
             var i = 10000;
 
             while (i-- > 0)
             {
-                var res = await context.RequestAsync<HelloResponse>(pid, new HelloRequest());
+                var res = await cluster.RequestAsync<HelloResponse>("TheName", "HelloKind", new HelloRequest(),CancellationToken.None);
                 Console.WriteLine(res.Message);
                 await Task.Delay(500);
             }
@@ -57,7 +52,7 @@ namespace Node1
             await Task.Delay(-1);
             Console.WriteLine("Shutting Down...");
 
-            await cluster.Shutdown();
+            await cluster.ShutdownAsync();
         }
 
         private static Node1Config ParseArgs(string[] args)

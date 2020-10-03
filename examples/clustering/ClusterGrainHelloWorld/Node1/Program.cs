@@ -24,7 +24,7 @@ class Program
         var grains = new Grains(cluster);
         serialization.RegisterFileDescriptor(ProtosReflection.Descriptor);
 
-        await cluster.Start("MyCluster", "node1", 12001, new ConsulProvider(new ConsulProviderOptions(), c => c.Address = new Uri("http://consul:8500/")));
+        await cluster.StartMemberAsync("MyCluster", "node1", 12001, new ConsulProvider(new ConsulProviderOptions(), c => c.Address = new Uri("http://consul:8500/")));
         await Task.Delay(2000);
 
         var client = grains.HelloGrain("Roger");
@@ -38,7 +38,7 @@ class Program
         Console.CancelKeyPress += async (e, y) =>
         {
             Console.WriteLine("Shutting Down...");
-            await cluster.Shutdown();
+            await cluster.ShutdownAsync();
         };
         await Task.Delay(-1);
     }

@@ -1,6 +1,7 @@
 ﻿syntax = "proto3";
 package drawnicetrace;
 option csharp_namespace = "DrawNiceTrace";
+import "protoactor/protos.proto";
 
 message AddItem {
     int64 CartNumber = 1;
@@ -39,6 +40,7 @@ message AskPaymentDetails{
 
 message SendPaymentDetails{
     int64 OrderNumber = 1;
+    actor.PID Customer = 2;
 }
 
 message ProcessPayment{
@@ -55,6 +57,7 @@ message ConfirmPayment{
 
 message TriggerFood{
     int64 OrderNumber = 1;
+    actor.PID Customer = 2;
 }
 
 message DeliverFood{
