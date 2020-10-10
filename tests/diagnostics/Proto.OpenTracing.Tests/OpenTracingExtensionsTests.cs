@@ -45,7 +45,7 @@ namespace Proto.OpenTracing.Tests
             var messages = new List<object>();
 
             var actorProps = Props
-                .FromFunc(ctx => { messages.Add(ctx.Message); return Actor.Done; })
+                .FromFunc(ctx => { messages.Add(ctx.Message); return Task.CompletedTask; })
                 .WithMailbox(() => new TestMailbox())
                 .WithOpenTracing(tracer: _tracer)
                 ;
@@ -70,7 +70,7 @@ namespace Proto.OpenTracing.Tests
             var messages = new List<object>();
 
             var actorProps = Props
-                .FromFunc(ctx => { messages.Add(ctx.Message); return Actor.Done; })
+                .FromFunc(ctx => { messages.Add(ctx.Message); return Task.CompletedTask; })
                 .WithMailbox(() => new TestMailbox())
                 ;
             var actor = System.Root.Spawn(actorProps);
@@ -93,7 +93,7 @@ namespace Proto.OpenTracing.Tests
             var messages = new List<object>();
 
             var finalTargetProps = Props
-                .FromFunc(ctx => { messages.Add(ctx.Message); return Actor.Done; })
+                .FromFunc(ctx => { messages.Add(ctx.Message); return Task.CompletedTask; })
                 .WithMailbox(() => new TestMailbox())
                 ;
             var finalTarget = System.Root.Spawn(finalTargetProps);
@@ -108,7 +108,7 @@ namespace Proto.OpenTracing.Tests
                             case "request": ctx.Request(finalTarget, msg); break;
                             case "forward": ctx.Forward(finalTarget); break;
                         }
-                    return Actor.Done;
+                    return Task.CompletedTask;
                 })
                 .WithMailbox(() => new TestMailbox())
                 // This is OpenTracing stack without received

@@ -19,21 +19,29 @@ class Program
     static async Task Main(string[] args)
     {
         var system = new ActorSystem();
-        var serialization = new Serialization();
-        var cluster = new Cluster(system, serialization);
-        var grains = new Grains(cluster);
-        serialization.RegisterFileDescriptor(ProtosReflection.Descriptor);
+        
+        var remoteConfig = new RemoteConfig().WithProtoMessages(ProtosReflection.Descriptor);
+            
+        var consulProvider =
+            new ConsulProvider(new ConsulProviderConfig(), c => c.Address = new Uri("http://consul:8500/"));
+            
+        var clusterConfig = 
+            new ClusterConfig("MyCluster", "node1", 12001,consulProvider)
+                .WithRemoteConfig(remoteConfig);
 
-        await cluster.StartMemberAsync("MyCluster", "node1", 12001, new ConsulProvider(new ConsulProviderOptions(), c => c.Address = new Uri("http://consul:8500/")));
+        var cluster = new Cluster(system, clusterConfig);
+        
+        await cluster.StartMemberAsync();
         await Task.Delay(2000);
-
+        
+        var grains = new Grains(cluster);
         var client = grains.HelloGrain("Roger");
 
-        var res = client.SayHello(new HelloRequest()).Result;
+        var res = await client.SayHello(new HelloRequest());
         Console.WriteLine(res.Message);
 
 
-        res = client.SayHello(new HelloRequest()).Result;
+        res = await client.SayHello(new HelloRequest());
         Console.WriteLine(res.Message);
         Console.CancelKeyPress += async (e, y) =>
         {

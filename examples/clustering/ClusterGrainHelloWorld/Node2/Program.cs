@@ -31,14 +31,21 @@ namespace Node2
         static async Task Main(string[] args)
         {
             var system = new ActorSystem();
-            var serialization = new Serialization();
-            var cluster = new Cluster(system, serialization);
+
+            var remoteConfig = new RemoteConfig().WithProtoMessages(ProtosReflection.Descriptor);
+            
+            var consulProvider =
+                new ConsulProvider(new ConsulProviderConfig(), c => c.Address = new Uri("http://consul:8500/"));
+            
+            var clusterConfig = 
+                new ClusterConfig("MyCluster", "node2", 12000,consulProvider)
+                .WithRemoteConfig(remoteConfig);
+            
+            var cluster = new Cluster(system, clusterConfig);
             var grains = new Grains(cluster);
-            serialization.RegisterFileDescriptor(ProtosReflection.Descriptor);
-
             grains.HelloGrainFactory(() => new HelloGrain());
-
-            await cluster.StartMemberAsync("MyCluster", "node2", 12000, new ConsulProvider(new ConsulProviderOptions(), c => c.Address = new Uri("http://consul:8500/")));
+            
+            await cluster.StartMemberAsync();
 
             Console.CancelKeyPress += async (e, y) =>
             {

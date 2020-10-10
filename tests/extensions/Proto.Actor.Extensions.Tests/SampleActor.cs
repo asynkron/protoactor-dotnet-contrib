@@ -16,7 +16,7 @@ namespace Proto.ActorExtensions.Tests
 
         public Task ReceiveAsync(IContext context)
         {
-            return Actor.Done;
+            return Task.CompletedTask;
         }
     }
 }

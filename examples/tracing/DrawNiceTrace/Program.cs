@@ -28,7 +28,7 @@ namespace DrawNiceTrace
                     ctx =>
                     {
                         if (ctx.Message is ProcessPayment _) ctx.Respond(new ProcessPaymentResponse { Ok = true });
-                        return Actor.Done;
+                        return Task.CompletedTask;
                     }
                 )
                 .WithOpenTracing();

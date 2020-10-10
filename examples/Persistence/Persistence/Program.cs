@@ -121,7 +121,7 @@ class Program
 
         private Task Handle(IContext context, StartLoopActor message)
         {
-            if (_timerStarted) return Actor.Done;
+            if (_timerStarted) return Task.CompletedTask;
 
             _timerStarted = true;
 
@@ -131,7 +131,7 @@ class Program
 
             _loopActor = context.Spawn(props);
 
-            return Actor.Done;
+            return Task.CompletedTask;
         }
 
         private async Task Handle(RenameCommand message)
@@ -174,7 +174,7 @@ class Program
                     break;
             }
 
-            return Actor.Done;
+            return Task.CompletedTask;
         }
 
         static string GeneratePronounceableName(int length)

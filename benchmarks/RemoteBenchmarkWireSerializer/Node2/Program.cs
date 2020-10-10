@@ -25,19 +25,19 @@ namespace Node2
                     Console.WriteLine("Starting");
                     _sender = sr.Sender;
                     context.Respond(new Start());
-                    return Actor.Done;
+                    return Task.CompletedTask;
                 case Ping _:
                     context.Send(_sender, new Pong());
-                    return Actor.Done;
+                    return Task.CompletedTask;
                 default:
-                    return Actor.Done;
+                    return Task.CompletedTask;
             }
         }
     }
 
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var system = new ActorSystem();
             var context = new RootContext(system);
@@ -45,9 +45,11 @@ namespace Node2
             //Registering "knownTypes" is not required, but improves performance as those messages
             //do not need to pass any typename manifest
             var wire = new WireSerializer(new[] { typeof(Ping), typeof(Pong), typeof(StartRemote), typeof(Start) });
-            serialization.RegisterSerializer(wire, true);
-            var Remote = new Remote(system, serialization);
-            Remote.Start("127.0.0.1", 12000);
+
+            var remoteConfig = new RemoteConfig("127.0.0.1", 12001);
+            remoteConfig.Serialization.RegisterSerializer(wire,true);
+            var remote = new Remote(system, remoteConfig);
+            await remote.StartAsync();
             context.SpawnNamed(Props.FromProducer(() => new EchoActor()), "remote");
             Console.ReadLine();
         }

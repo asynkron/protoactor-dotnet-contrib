@@ -26,19 +26,22 @@ namespace Node1
 
             Console.WriteLine("Starting Node1");
             var system = new ActorSystem();
-            var serialization = new Serialization();
+            
             var context = new RootContext(system);
-            serialization.RegisterFileDescriptor(ProtosReflection.Descriptor);
-            var cluster = new Cluster(system, serialization);
+            
+            var clusterConfig = new ClusterConfig("MyCluster", "node1", 12001,
+                    new ConsulProvider(new ConsulProviderConfig(), c => c.Address = new Uri("http://consul:8500/"))
+                )
+                .WithRemoteConfig(r => r.WithProtoMessages(ProtosReflection.Descriptor));
+            
+            var cluster = new Cluster(system, clusterConfig);
             var parsedArgs = ParseArgs(args);
             // SINGLE REMOTE INSTANCE
             // Cluster.Start("MyCluster", parsedArgs.ServerName, 12001, new SingleRemoteInstanceProvider("localhost", 12000));
 
             // CONSUL 
 
-            await cluster.StartMemberAsync(
-                "MyCluster", "node1", 12001, new ConsulProvider(new ConsulProviderOptions(), c => c.Address = new Uri("http://consul:8500/"))
-            );
+            await cluster.StartMemberAsync();
             
             var i = 10000;
 

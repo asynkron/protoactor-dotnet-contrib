@@ -93,7 +93,7 @@ namespace SimpleScheduler
                     break;
             }
 
-            return Actor.Done;
+            return Task.CompletedTask;
         }
     }
 
@@ -109,7 +109,7 @@ namespace SimpleScheduler
                     break;
             }
 
-            return Actor.Done;
+            return Task.CompletedTask;
         }
     }
 }

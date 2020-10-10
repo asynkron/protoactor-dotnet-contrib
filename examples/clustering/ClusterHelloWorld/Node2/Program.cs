@@ -28,7 +28,7 @@ namespace Node2
             var serialization = new Serialization();
             var context = new RootContext(system);
             serialization.RegisterFileDescriptor(ProtosReflection.Descriptor);
-            var Cluster = new Cluster(system, serialization);
+   
 
             var props = Props.FromFunc(
                 ctx =>
@@ -40,17 +40,22 @@ namespace Node2
                             break;
                     }
 
-                    return Actor.Done;
+                    return Task.CompletedTask;
                 }
             );
 
             var parsedArgs = ParseArgs(args);
-            Cluster.Remote.RegisterKnownKind("HelloKind", props);
+            var clusterConfig = new ClusterConfig("MyCluster", "node1", 12000,
+                    new ConsulProvider(new ConsulProviderConfig(), c => c.Address = new Uri("http://consul:8500/"))
+                )
+                .WithRemoteConfig(r => r.WithProtoMessages(ProtosReflection.Descriptor))
+                .WithClusterKind("HelloKind", props);
+
+            
+            var Cluster = new Cluster(system, clusterConfig);
             
             // CONSUL 
-            await Cluster.StartMemberAsync(
-                "MyCluster", "node2", 12000, new ConsulProvider(new ConsulProviderOptions(), c => c.Address = new Uri("http://consul:8500/"))
-            );
+            await Cluster.StartMemberAsync();
 
             await Task.Delay(-1);
 
