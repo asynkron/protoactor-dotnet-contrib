@@ -11,7 +11,9 @@ using Microsoft.Extensions.Logging;
 using Proto;
 using Proto.Cluster;
 using Proto.Cluster.Consul;
+using Proto.Cluster.Partition;
 using Proto.Remote;
+using Proto.Remote.GrpcCore;
 using ProtosReflection = Messages.ProtosReflection;
 
 namespace Node2
@@ -44,23 +46,32 @@ namespace Node2
                 }
             );
 
-            var parsedArgs = ParseArgs(args);
-            var clusterConfig = new ClusterConfig("MyCluster", "node1", 12000,
-                    new ConsulProvider(new ConsulProviderConfig(), c => c.Address = new Uri("http://consul:8500/"))
-                )
-                .WithRemoteConfig(r => r.WithProtoMessages(ProtosReflection.Descriptor))
-                .WithClusterKind("HelloKind", props);
+           
+            var remoteConfig = GrpcCoreRemoteConfig
+                .BindToLocalhost(12001)
+                .WithProtoMessages(ProtosReflection.Descriptor);
+            
+            var clusterConfig = ClusterConfig.Setup("MyCluster",
+                new ConsulProvider(new ConsulProviderConfig(), c => c.Address = new Uri("http://consul:8500/")),
+                new PartitionIdentityLookup()
+            ).WithClusterKind("HelloKind", props);
 
+            system
+                .WithRemote(remoteConfig)
+                .WithCluster(clusterConfig);
             
-            var Cluster = new Cluster(system, clusterConfig);
-            
+
             // CONSUL 
-            await Cluster.StartMemberAsync();
+            await system
+                .Cluster()
+                .StartMemberAsync();
 
             await Task.Delay(-1);
 
             Console.WriteLine("Shutting Down...");
-            await Cluster.ShutdownAsync();
+            await system
+                .Cluster()
+                .ShutdownAsync();
         }
 
         private static Node2Config ParseArgs(string[] args)

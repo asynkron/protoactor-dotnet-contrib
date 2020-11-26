@@ -9,4 +9,7 @@
     <ProjectReference Include="..\..\..\src\serialization\Proto.Serialization.Wire\Proto.Serialization.Wire.csproj" />
     <ProjectReference Include="..\Messages\Messages.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Proto.Remote.GrpcCore" Version="0.9.1-alpha.0.71" />
+  </ItemGroup>
 </Project>

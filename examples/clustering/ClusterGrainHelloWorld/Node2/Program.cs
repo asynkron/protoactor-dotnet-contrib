@@ -10,7 +10,9 @@ using Messages;
 using Proto;
 using Proto.Cluster;
 using Proto.Cluster.Consul;
+using Proto.Cluster.Partition;
 using Proto.Remote;
+using Proto.Remote.GrpcCore;
 using ProtosReflection = Messages.ProtosReflection;
 
 namespace Node2
@@ -32,25 +34,29 @@ namespace Node2
         {
             var system = new ActorSystem();
 
-            var remoteConfig = new RemoteConfig().WithProtoMessages(ProtosReflection.Descriptor);
+            var remoteConfig =  GrpcCoreRemoteConfig
+                .BindToLocalhost(12000)
+                .WithProtoMessages(ProtosReflection.Descriptor);
             
             var consulProvider =
                 new ConsulProvider(new ConsulProviderConfig(), c => c.Address = new Uri("http://consul:8500/"));
+
+            var clusterConfig =
+                ClusterConfig.Setup("MyCluster", consulProvider, new PartitionIdentityLookup());
             
-            var clusterConfig = 
-                new ClusterConfig("MyCluster", "node2", 12000,consulProvider)
-                .WithRemoteConfig(remoteConfig);
-            
-            var cluster = new Cluster(system, clusterConfig);
-            var grains = new Grains(cluster);
+            system
+                .WithRemote(remoteConfig)
+                .WithCluster(clusterConfig);
+
+            var grains = new Grains(system.Cluster());
             grains.HelloGrainFactory(() => new HelloGrain());
             
-            await cluster.StartMemberAsync();
+            await system.Cluster().StartMemberAsync();
 
             Console.CancelKeyPress += async (e, y) =>
             {
                 Console.WriteLine("Shutting Down...");
-                await cluster.ShutdownAsync();
+                await system.Cluster().ShutdownAsync();
             };
             await Task.Delay(-1);
         }

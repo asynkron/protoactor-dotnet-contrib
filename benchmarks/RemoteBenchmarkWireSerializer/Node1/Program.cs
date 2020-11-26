@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Messages;
 using Proto;
 using Proto.Remote;
+using Proto.Remote.GrpcCore;
 using Proto.Serialization.Wire;
 
 class Program
@@ -21,12 +22,13 @@ class Program
         
         //Registering "knownTypes" is not required, but improves performance as those messages
         //do not need to pass any typename manifest
-        var wire = new WireSerializer(new[] { typeof(Ping), typeof(Pong), typeof(StartRemote), typeof(Start) });
+        
 
-        var remoteConfig = new RemoteConfig("127.0.0.1", 12001);
-        remoteConfig.Serialization.RegisterSerializer(wire,true);
-        var remote = new Remote(system, remoteConfig);
-        await remote.StartAsync();
+        var remoteConfig = GrpcCoreRemoteConfig.BindToLocalhost(12001);
+        system.WithRemote(remoteConfig);
+        var wire = new WireSerializer(new[] { typeof(Ping), typeof(Pong), typeof(StartRemote), typeof(Start) });
+        system.Serialization().RegisterSerializer(wire,true);
+        await system.Remote().StartAsync();
 
         var messageCount = 1000000;
         var wg = new AutoResetEvent(false);

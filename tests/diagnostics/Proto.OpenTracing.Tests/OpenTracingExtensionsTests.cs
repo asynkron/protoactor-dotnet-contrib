@@ -64,7 +64,7 @@ namespace Proto.OpenTracing.Tests
         [Fact]
         public void RootContextOpenTracingSenderTest()
         {
-            var root = new RootContext(System, new MessageHeader(), OpenTracingExtensions.OpenTracingSenderMiddleware(_tracer))
+            var root = new RootContext(System, MessageHeader.Empty, OpenTracingExtensions.OpenTracingSenderMiddleware(_tracer))
                 .WithOpenTracing(tracer: _tracer);
 
             var messages = new List<object>();

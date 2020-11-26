@@ -12,7 +12,9 @@ using Microsoft.Extensions.Logging;
 using Proto;
 using Proto.Cluster;
 using Proto.Cluster.Consul;
+using Proto.Cluster.Partition;
 using Proto.Remote;
+using Proto.Remote.GrpcCore;
 using ProtosReflection = Messages.ProtosReflection;
 
 namespace Node1
@@ -28,26 +30,34 @@ namespace Node1
             var system = new ActorSystem();
             
             var context = new RootContext(system);
-            
-            var clusterConfig = new ClusterConfig("MyCluster", "node1", 12001,
-                    new ConsulProvider(new ConsulProviderConfig(), c => c.Address = new Uri("http://consul:8500/"))
-                )
-                .WithRemoteConfig(r => r.WithProtoMessages(ProtosReflection.Descriptor));
-            
-            var cluster = new Cluster(system, clusterConfig);
-            var parsedArgs = ParseArgs(args);
-            // SINGLE REMOTE INSTANCE
-            // Cluster.Start("MyCluster", parsedArgs.ServerName, 12001, new SingleRemoteInstanceProvider("localhost", 12000));
 
+            var remoteConfig = GrpcCoreRemoteConfig
+                .BindToLocalhost(12000)
+                .WithProtoMessages(ProtosReflection.Descriptor);
+            
+            var clusterConfig = ClusterConfig.Setup("MyCluster",
+                new ConsulProvider(new ConsulProviderConfig(), c => c.Address = new Uri("http://consul:8500/")),
+                new PartitionIdentityLookup()
+            );
+
+            system
+                .WithRemote(remoteConfig)
+                .WithCluster(clusterConfig);
+            
             // CONSUL 
 
-            await cluster.StartMemberAsync();
+            await system
+                .Cluster()
+                .StartMemberAsync();
             
             var i = 10000;
 
             while (i-- > 0)
             {
-                var res = await cluster.RequestAsync<HelloResponse>("TheName", "HelloKind", new HelloRequest(),CancellationToken.None);
+                var res = await system
+                    .Cluster()
+                    .RequestAsync<HelloResponse>("TheName", "HelloKind", new HelloRequest(),CancellationToken.None);
+                
                 Console.WriteLine(res.Message);
                 await Task.Delay(500);
             }
@@ -55,24 +65,7 @@ namespace Node1
             await Task.Delay(-1);
             Console.WriteLine("Shutting Down...");
 
-            await cluster.ShutdownAsync();
-        }
-
-        private static Node1Config ParseArgs(string[] args)
-            => args.Length > 0 ? new Node1Config(args[0], args[1], bool.Parse(args[2])) : new Node1Config("localhost", "localhost", true);
-
-        class Node1Config
-        {
-            public string ServerName { get; }
-            public string ConsulUrl { get; }
-            public bool StartConsul { get; }
-
-            public Node1Config(string serverName, string consulUrl, bool startConsul)
-            {
-                ServerName = serverName;
-                ConsulUrl = consulUrl;
-                StartConsul = startConsul;
-            }
+            await system.Cluster().ShutdownAsync();
         }
     }
 }

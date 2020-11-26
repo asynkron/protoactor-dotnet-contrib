@@ -21,7 +21,7 @@ namespace DrawNiceTrace
                 .Build();
             GlobalTracer.Register(tracer);
             var system = new ActorSystem();
-            var rootContext = new RootContext(system, new MessageHeader(), OpenTracingExtensions.OpenTracingSenderMiddleware())
+            var rootContext = new RootContext(system, MessageHeader.Empty, OpenTracingExtensions.OpenTracingSenderMiddleware())
                 .WithOpenTracing();
 
             var bankProps = Props.FromFunc(

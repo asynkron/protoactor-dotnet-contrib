@@ -11,6 +11,6 @@
     <PackageReference Remove="xunit.runner.visualstudio" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Proto.Actor" Version="0.9.0" />
+    <PackageReference Include="Proto.Actor" Version="0.9.1-alpha.0.71" />
   </ItemGroup>
 </Project>

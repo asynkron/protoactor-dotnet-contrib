@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CouchbaseNetClient" Version="2.7.16" />
-    <PackageReference Include="Proto.Persistence" Version="0.9.0" />
+   <PackageReference Include="CouchbaseNetClient" Version="2.7.16" />
+    <PackageReference Include="Proto.Persistence" Version="0.9.1-alpha.0.71" />
   </ItemGroup>
 </Project>

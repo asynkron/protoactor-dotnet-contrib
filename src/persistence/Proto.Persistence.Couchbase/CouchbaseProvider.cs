@@ -7,10 +7,12 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Couchbase;
 using Couchbase.Core;
 using Couchbase.N1QL;
 
-namespace Proto.Persistence.Couchbase
+
+ namespace Proto.Persistence.Couchbase
 {
     public class CouchbaseProvider : IProvider
     {

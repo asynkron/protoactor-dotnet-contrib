@@ -11,7 +11,9 @@ using Messages;
 using Proto;
 using Proto.Cluster;
 using Proto.Cluster.Consul;
+using Proto.Cluster.Partition;
 using Proto.Remote;
+using Proto.Remote.GrpcCore;
 using ProtosReflection = Messages.ProtosReflection;
 
 class Program
@@ -20,21 +22,25 @@ class Program
     {
         var system = new ActorSystem();
         
-        var remoteConfig = new RemoteConfig().WithProtoMessages(ProtosReflection.Descriptor);
+        var remoteConfig = GrpcCoreRemoteConfig
+            .BindToLocalhost(12001)
+            .WithProtoMessages(ProtosReflection.Descriptor);
             
         var consulProvider =
             new ConsulProvider(new ConsulProviderConfig(), c => c.Address = new Uri("http://consul:8500/"));
-            
-        var clusterConfig = 
-            new ClusterConfig("MyCluster", "node1", 12001,consulProvider)
-                .WithRemoteConfig(remoteConfig);
 
-        var cluster = new Cluster(system, clusterConfig);
-        
-        await cluster.StartMemberAsync();
+        var clusterConfig =
+             ClusterConfig
+                 .Setup("MyCluster",  consulProvider, new PartitionIdentityLookup());
+
+        system
+            .WithRemote(remoteConfig)
+            .WithCluster(clusterConfig);
+
+        await system.Cluster().StartMemberAsync();
         await Task.Delay(2000);
         
-        var grains = new Grains(cluster);
+        var grains = new Grains(system.Cluster());
         var client = grains.HelloGrain("Roger");
 
         var res = await client.SayHello(new HelloRequest());
@@ -46,7 +52,7 @@ class Program
         Console.CancelKeyPress += async (e, y) =>
         {
             Console.WriteLine("Shutting Down...");
-            await cluster.ShutdownAsync();
+            await system.Cluster().ShutdownAsync();
         };
         await Task.Delay(-1);
     }
